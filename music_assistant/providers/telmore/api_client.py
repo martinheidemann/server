@@ -23,7 +23,8 @@ JsonLike = dict[str, Any]
 
 
 def graphql_path(result: JsonLike | None, *keys: str) -> Any:
-    """Walk a GraphQL result by key, treating explicit nulls as missing.
+    """
+    Walk a GraphQL result by key, treating explicit nulls as missing.
 
     ``dict.get(key, {})`` returns the stored value when the key exists, so a
     GraphQL null - which is how the API reports an item that is gone from the
