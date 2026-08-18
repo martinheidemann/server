@@ -1,4 +1,5 @@
-"""Test the Telmore Musik login and token refresh flow.
+"""
+Test the Telmore Musik login and token refresh flow.
 
 Telmore runs the 24-7 Entertainment platform in `OauthEmbedded` mode, which differs
 from the `OauthNavigation` mode the sibling yousee provider implements: the identity

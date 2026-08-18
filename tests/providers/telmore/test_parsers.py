@@ -38,7 +38,8 @@ FULL_TRACK = {
 
 
 async def test_minimal_album_becomes_item_mapping(provider: Any) -> None:
-    """A track whose album is id + title must not trigger a catalog lookup.
+    """
+    A track whose album is id + title must not trigger a catalog lookup.
 
     Resolving it would cost one request per track, and a track whose album has
     left the catalog would raise and abort the entire library sync.
