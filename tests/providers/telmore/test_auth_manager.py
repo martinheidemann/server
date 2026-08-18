@@ -41,8 +41,13 @@ CALLBACK_BODY = """
 """
 
 
-def _response(*, status: int = 200, headers: dict[str, str] | None = None,
-              json_body: Any = None, text_body: str = "") -> Mock:
+def _response(
+    *,
+    status: int = 200,
+    headers: dict[str, str] | None = None,
+    json_body: Any = None,
+    text_body: str = "",
+) -> Mock:
     """Build an async context manager that mimics an aiohttp response."""
     response = Mock()
     response.status = status
