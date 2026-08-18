@@ -4,11 +4,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from music_assistant_models.enums import AlbumType, ContentType, ExternalID, ImageType
+from music_assistant_models.enums import (
+    AlbumType,
+    ContentType,
+    ExternalID,
+    ImageType,
+    MediaType,
+)
 from music_assistant_models.media_items import (
     Album,
     Artist,
     AudioFormat,
+    ItemMapping,
     MediaItemImage,
     Playlist,
     ProviderMapping,
@@ -63,9 +70,20 @@ async def parse_track(provider: TelmoreMusikProvider, track_obj: JsonLike) -> Tr
         feat_artist = parse_artist(provider, feat_artist_obj)
         track.artists.append(feat_artist)
 
-    if "album" in track_obj:
-        album = await parse_album(provider, track_obj["album"])
-        track.album = album
+    if album_obj := track_obj.get("album"):
+        if "artist" in album_obj:
+            track.album = await parse_album(provider, album_obj)
+        else:
+            # The favorites and playlist queries return the album as id + title only.
+            # An ItemMapping carries everything needed here, where resolving the full
+            # album would cost a catalog lookup per track — and would abort the whole
+            # sync for a track whose album has since left the catalog.
+            track.album = ItemMapping(
+                media_type=MediaType.ALBUM,
+                item_id=str(album_obj["id"]),
+                provider=provider.instance_id,
+                name=album_obj["title"],
+            )
 
     if track_genre := track_obj.get("genre"):
         track.metadata.genres = set(track_genre)
