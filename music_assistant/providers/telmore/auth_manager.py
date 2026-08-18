@@ -35,12 +35,12 @@ class TelmoreAccessToken:
         expires_at = try_parse_int(self._token_parts.get("ExpiresOn", 0))
         return not expires_at or expires_at <= time.time()
 
-    def _parse_access_token(self, token: str) -> JsonLike:
-        return dict(part.split("=", 1) for part in token.split("&") if "=" in part)
-
     def __str__(self) -> str:
         """Return string representation of the access token."""
         return self._access_token
+
+    def _parse_access_token(self, token: str) -> JsonLike:
+        return dict(part.split("=", 1) for part in token.split("&") if "=" in part)
 
 
 class TelmoreAuthManager:
@@ -94,7 +94,8 @@ class TelmoreAuthManager:
         return self._access_token
 
     async def _login(self) -> TelmoreAccessToken | None:
-        """Perform a full username/password login.
+        """
+        Perform a full username/password login.
 
         Telmore runs the 24-7 Entertainment web app in `OauthEmbedded` mode: the
         delegated login redirects to the Telmore identity provider, which takes the

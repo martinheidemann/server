@@ -330,40 +330,6 @@ class TelmoreMediaManager:
             raise MediaNotFoundError(f"Album {prov_album_id} not found")
         return await parse_album(self.provider, result["data"]["catalog"]["album"])
 
-    async def _get_lyrics(self, prov_track_id: str) -> list[JsonLike]:
-        """Attempt to retrieve lyrics for the given track id."""
-        query = """
-            query Lyric($id: ID!, $first: Int = 50, $after: String) {
-                catalog {
-                    track(id: $id) {
-                        lyrics {
-                            lrc(first: $first, after: $after) {
-                                pageInfo {
-                                    hasNextPage
-                                    endCursor
-                                }
-                                items {
-                                    startInMs
-                                    durationInMs
-                                    line
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        """
-        variables = {"id": prov_track_id}
-
-        lines = []
-
-        async for line in self.api.paginate_graphql(
-            query, variables, ["data", "catalog", "track", "lyrics", "lrc"]
-        ):
-            lines.append(line)
-
-        return lines
-
     async def get_track(self, prov_track_id: str) -> Track:
         """Get full track details by id."""
         query = """
@@ -626,3 +592,37 @@ class TelmoreMediaManager:
             await parse_track(self.provider, item)
             for item in result["data"]["catalog"]["track"]["similarTracks"]["items"]
         ]
+
+    async def _get_lyrics(self, prov_track_id: str) -> list[JsonLike]:
+        """Attempt to retrieve lyrics for the given track id."""
+        query = """
+            query Lyric($id: ID!, $first: Int = 50, $after: String) {
+                catalog {
+                    track(id: $id) {
+                        lyrics {
+                            lrc(first: $first, after: $after) {
+                                pageInfo {
+                                    hasNextPage
+                                    endCursor
+                                }
+                                items {
+                                    startInMs
+                                    durationInMs
+                                    line
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        variables = {"id": prov_track_id}
+
+        lines = []
+
+        async for line in self.api.paginate_graphql(
+            query, variables, ["data", "catalog", "track", "lyrics", "lrc"]
+        ):
+            lines.append(line)
+
+        return lines
