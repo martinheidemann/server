@@ -118,3 +118,9 @@ PROBED_DURATION_MEDIA_TYPES = (
 # A forward skip never lands closer than this to the end of the item. The item then finishes on
 # its own and the queue advances normally.
 SKIP_END_MARGIN = 1
+
+# Relative skips are collapsed over this window so a burst of button presses rebuilds the stream
+# once, at the accumulated target, instead of once per press. Shorter than the delay used for
+# next/previous because this window is also the size of the position snap-back when the restart
+# lands.
+SKIP_DEBOUNCE_DELAY = 0.5
