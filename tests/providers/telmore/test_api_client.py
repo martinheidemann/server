@@ -2,7 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+from music_assistant_models.errors import MediaNotFoundError
+
 from music_assistant.providers.telmore.api_client import graphql_path
+from music_assistant.providers.telmore.media import TelmoreMediaManager
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 def test_walks_nested_keys() -> None:
@@ -41,3 +51,18 @@ def test_falsy_leaf_is_preserved() -> None:
     """A legitimate False leaf is returned as-is, not swallowed."""
     result = {"data": {"reportPlayback": {"ok": False}}}
     assert graphql_path(result, "data", "reportPlayback", "ok") is False
+
+
+async def test_get_album_raises_media_not_found_on_null_catalog(provider: Any) -> None:
+    """
+    A null catalog must surface as MediaNotFoundError, not AttributeError.
+
+    The hourly album reconciliation catches MusicAssistantError per album and
+    carries on; an AttributeError escapes and kills the whole task.
+    """
+    provider.api = Mock()
+    provider.api.post_graphql = AsyncMock(return_value={"data": {"catalog": None}})
+    media = TelmoreMediaManager(provider)
+
+    with pytest.raises(MediaNotFoundError):
+        await media.get_album("3841864")
