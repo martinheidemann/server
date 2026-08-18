@@ -211,9 +211,7 @@ class TelmoreLibraryManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        return bool(
-            graphql_path(result, "data", "favorites", f"add{media_type_str}", "ok")
-        )
+        return bool(graphql_path(result, "data", "favorites", f"add{media_type_str}", "ok"))
 
     async def remove_item(self, prov_item_id: str, media_type: MediaType) -> bool:
         """Remove item from provider's library. Return true on success."""
@@ -243,6 +241,4 @@ class TelmoreLibraryManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        return bool(
-            graphql_path(result, "data", "favorites", f"remove{media_type_str}", "ok")
-        )
+        return bool(graphql_path(result, "data", "favorites", f"remove{media_type_str}", "ok"))
