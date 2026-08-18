@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from music_assistant_models.errors import MediaNotFoundError
 
+from music_assistant.providers.telmore.api_client import graphql_path
 from music_assistant.providers.telmore.constants import IMAGE_SIZE
 from music_assistant.providers.telmore.parsers import parse_playlist
 
@@ -45,9 +46,7 @@ class TelmorePlaylistManager:
         """
         variables = {"title": name, "imageSize": IMAGE_SIZE}
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("playlists", {}).get("create", {}).get(
-            "playlist"
-        ):
+        if not graphql_path(result, "data", "playlists", "create", "playlist"):
             raise MediaNotFoundError(
                 f"Could not create playlist {name}",
                 translation_key="playlist_create_failed",
@@ -73,9 +72,7 @@ class TelmorePlaylistManager:
         variables = {"id": prov_playlist_id, "trackIds": prov_track_ids}
         result = await self.api.post_graphql(query, variables)
 
-        if not result or not result.get("data", {}).get("playlists", {}).get("addTracks", {}).get(
-            "ok"
-        ):
+        if not graphql_path(result, "data", "playlists", "addTracks", "ok"):
             raise MediaNotFoundError(
                 f"Could not add tracks to playlist {prov_playlist_id}: {prov_track_ids}"
             )
@@ -104,9 +101,7 @@ class TelmorePlaylistManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        if not result or not result.get("data", {}).get("playlists", {}).get(
-            "modifyTracks", {}
-        ).get("ok"):
+        if not graphql_path(result, "data", "playlists", "modifyTracks", "ok"):
             raise MediaNotFoundError(
                 f"Could not remove tracks from playlist {prov_playlist_id}: {positions_to_remove}"
             )

@@ -10,7 +10,7 @@ from music_assistant_models.enums import (
 from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.media_items import Album, Artist, Playlist, SearchResults, Track
 
-from music_assistant.providers.telmore.api_client import JsonLike
+from music_assistant.providers.telmore.api_client import JsonLike, graphql_path
 from music_assistant.providers.telmore.constants import (
     GET_POPULAR_TRACKS_LIMIT,
     IMAGE_SIZE,
@@ -149,7 +149,7 @@ class TelmoreMediaManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        result = result.get("data", {}).get("search", {})
+        result = graphql_path(result, "data", "search")
 
         if not result:
             return search_result
@@ -191,7 +191,7 @@ class TelmoreMediaManager:
         variables = {"id": prov_artist_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("artist"):
+        if not graphql_path(result, "data", "catalog", "artist"):
             raise MediaNotFoundError(f"Artist {prov_artist_id} not found")
         return parse_artist(self.provider, result["data"]["catalog"]["artist"])
 
@@ -281,7 +281,7 @@ class TelmoreMediaManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        if not result or not result.get("data", {}).get("catalog", {}).get("artist"):
+        if not graphql_path(result, "data", "catalog", "artist"):
             raise MediaNotFoundError(f"Artist {prov_artist_id} not found")
         tracks = []
 
@@ -326,7 +326,7 @@ class TelmoreMediaManager:
         variables = {"id": prov_album_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("album"):
+        if not graphql_path(result, "data", "catalog", "album"):
             raise MediaNotFoundError(f"Album {prov_album_id} not found")
         return await parse_album(self.provider, result["data"]["catalog"]["album"])
 
@@ -372,7 +372,7 @@ class TelmoreMediaManager:
         variables = {"id": prov_track_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("track"):
+        if not graphql_path(result, "data", "catalog", "track"):
             raise MediaNotFoundError(f"Track {prov_track_id} not found")
 
         track = await parse_track(self.provider, result["data"]["catalog"]["track"])
@@ -411,7 +411,7 @@ class TelmoreMediaManager:
         variables = {"id": prov_playlist_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("playlists", {}).get("playlist"):
+        if not graphql_path(result, "data", "playlists", "playlist"):
             raise MediaNotFoundError(f"Playlist {prov_playlist_id} not found")
 
         return await parse_playlist(self.provider, result["data"]["playlists"]["playlist"])
@@ -585,7 +585,7 @@ class TelmoreMediaManager:
             "imageSize": IMAGE_SIZE,
         }
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("track"):
+        if not graphql_path(result, "data", "catalog", "track"):
             raise MediaNotFoundError(f"Track {prov_track_id} not found")
 
         return [
