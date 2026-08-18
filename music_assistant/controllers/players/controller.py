@@ -2365,7 +2365,10 @@ class PlayerController(AnnouncementsMixin, ProtocolLinkingMixin, CoreController)
         """
         self._evaluate_protocol_links(player)
         if player.state.type == PlayerType.PROTOCOL:
-            # the player is hidden behind its parent from now on and no longer owns a queue
+            # the player is hidden behind its parent from now on and no longer owns a queue.
+            # dropping the queue is all that is needed: the role change is always driven by a
+            # (re)connect of the device, so the player has no playback or group membership of
+            # its own to release yet - unlike the removal paths, which stop and detach first.
             self.mass.signal_event(EventType.PLAYER_REMOVED, player.player_id)
             self.mass.player_queues.on_player_remove(player.player_id, permanent=False)
             return
