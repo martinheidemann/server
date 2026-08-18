@@ -12,7 +12,8 @@ def test_walks_nested_keys() -> None:
 
 
 def test_explicit_null_midway_returns_none() -> None:
-    """A GraphQL null must not raise.
+    """
+    A GraphQL null must not raise.
 
     This is how the API reports an item that has left the catalog, and
     ``result.get("data", {}).get("catalog", {})`` would hand back None here -
@@ -38,5 +39,5 @@ def test_non_dict_midway_returns_none() -> None:
 
 def test_falsy_leaf_is_preserved() -> None:
     """A legitimate False leaf is returned as-is, not swallowed."""
-    assert graphql_path({"data": {"reportPlayback": {"ok": False}}},
-                        "data", "reportPlayback", "ok") is False
+    result = {"data": {"reportPlayback": {"ok": False}}}
+    assert graphql_path(result, "data", "reportPlayback", "ok") is False
