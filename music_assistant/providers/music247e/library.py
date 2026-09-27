@@ -9,6 +9,7 @@ from music_assistant_models.enums import MediaType
 from music_assistant_models.errors import InvalidDataError
 
 from music_assistant.constants import VERBOSE_LOG_LEVEL
+from music_assistant.providers.music247e.api_client import graphql_path
 from music_assistant.providers.music247e.constants import IMAGE_SIZE
 from music_assistant.providers.music247e.parsers import (
     parse_album,
@@ -210,12 +211,7 @@ class Music247eLibraryManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        return bool(
-            result.get("data", {})
-            .get("favorites", {})
-            .get(f"add{media_type_str}", {})
-            .get("ok", False)
-        )
+        return bool(graphql_path(result, "data", "favorites", f"add{media_type_str}", "ok"))
 
     async def remove_item(self, prov_item_id: str, media_type: MediaType) -> bool:
         """Remove item from provider's library. Return true on success."""
@@ -245,9 +241,4 @@ class Music247eLibraryManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        return bool(
-            result.get("data", {})
-            .get("favorites", {})
-            .get(f"remove{media_type_str}", {})
-            .get("ok", False)
-        )
+        return bool(graphql_path(result, "data", "favorites", f"remove{media_type_str}", "ok"))

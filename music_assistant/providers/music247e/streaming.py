@@ -12,6 +12,7 @@ from music_assistant_models.media_items import AudioFormat
 from music_assistant_models.streamdetails import StreamDetails
 
 from music_assistant.helpers.datetime import iso_from_utc_timestamp, utc_timestamp
+from music_assistant.providers.music247e.api_client import graphql_path
 
 if TYPE_CHECKING:
     from music_assistant.providers.music247e.provider import Music247eProvider
@@ -47,7 +48,7 @@ class Music247eStreamingManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        playback_url = result.get("data", {}).get("playback", {}).get("full")
+        playback_url = graphql_path(result, "data", "playback", "full")
         if not playback_url:
             raise ResourceTemporarilyUnavailable(f"Track {item_id} is not available for streaming")
 
@@ -98,7 +99,7 @@ class Music247eStreamingManager:
 
         result = await self.api.post_graphql(mutation, {"report": variables})
 
-        if not result.get("data", {}).get("reportPlayback", {}).get("ok"):
+        if not graphql_path(result, "data", "reportPlayback", "ok"):
             self.logger.warning(
                 "Reporting playback for track %s failed with result %s",
                 streamdetails.item_id,

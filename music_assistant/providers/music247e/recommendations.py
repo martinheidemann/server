@@ -10,6 +10,7 @@ from music_assistant_models.media_items import (
     UniqueList,
 )
 
+from music_assistant.providers.music247e.api_client import graphql_path
 from music_assistant.providers.music247e.constants import IMAGE_SIZE, PAGE_SIZE
 from music_assistant.providers.music247e.parsers import parse_album, parse_track
 
@@ -156,7 +157,7 @@ class Music247eRecommendationsManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        if not result or not result.get("data", {}).get("me", {}).get("recommendations"):
+        if not graphql_path(result, "data", "me", "recommendations"):
             return []
 
         recommendations: list[RecommendationFolder] = []
