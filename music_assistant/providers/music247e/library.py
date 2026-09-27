@@ -118,6 +118,7 @@ class Music247eLibraryManager:
                             album {
                                 id
                                 title
+                                cover(size: $imageSize)
                             }
                             artist {
                                 id

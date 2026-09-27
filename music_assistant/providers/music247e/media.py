@@ -59,6 +59,7 @@ class Music247eMediaManager:
                             album {
                                 id
                                 title
+                                cover(size: $imageSize)
                             }
                             artist {
                                 id
@@ -352,6 +353,7 @@ class Music247eMediaManager:
                     album {
                         id
                         title
+                        cover(size: $imageSize)
                     }
                     artist {
                         id
