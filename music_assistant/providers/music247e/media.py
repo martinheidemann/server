@@ -10,7 +10,7 @@ from music_assistant_models.enums import (
 from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.media_items import Album, Artist, Playlist, SearchResults, Track
 
-from music_assistant.providers.music247e.api_client import JsonLike
+from music_assistant.providers.music247e.api_client import JsonLike, graphql_path
 from music_assistant.providers.music247e.constants import (
     GET_POPULAR_TRACKS_LIMIT,
     IMAGE_SIZE,
@@ -192,9 +192,9 @@ class Music247eMediaManager:
         variables = {"id": prov_artist_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("artist"):
+        if not (artist_obj := graphql_path(result, "data", "catalog", "artist")):
             raise MediaNotFoundError(f"Artist {prov_artist_id} not found")
-        return parse_artist(self.provider, result["data"]["catalog"]["artist"])
+        return parse_artist(self.provider, artist_obj)
 
     async def get_artist_albums(self, prov_artist_id: str) -> list[Album]:
         """Get a list of all albums for the given artist."""
@@ -287,11 +287,11 @@ class Music247eMediaManager:
 
         result = await self.api.post_graphql(query, variables)
 
-        if not result or not result.get("data", {}).get("catalog", {}).get("artist"):
+        if not (artist_obj := graphql_path(result, "data", "catalog", "artist")):
             raise MediaNotFoundError(f"Artist {prov_artist_id} not found")
         tracks = []
 
-        for item in result["data"]["catalog"]["artist"]["tracks"]["items"]:
+        for item in artist_obj["tracks"]["items"]:
             tracks.append(await parse_track(self.provider, item))
 
         return tracks
@@ -332,9 +332,9 @@ class Music247eMediaManager:
         variables = {"id": prov_album_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("album"):
+        if not (album_obj := graphql_path(result, "data", "catalog", "album")):
             raise MediaNotFoundError(f"Album {prov_album_id} not found")
-        return await parse_album(self.provider, result["data"]["catalog"]["album"])
+        return await parse_album(self.provider, album_obj)
 
     async def get_track(self, prov_track_id: str) -> Track:
         """Get full track details by id."""
@@ -379,12 +379,12 @@ class Music247eMediaManager:
         variables = {"id": prov_track_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("track"):
+        if not (track_obj := graphql_path(result, "data", "catalog", "track")):
             raise MediaNotFoundError(f"Track {prov_track_id} not found")
 
-        track = await parse_track(self.provider, result["data"]["catalog"]["track"])
+        track = await parse_track(self.provider, track_obj)
 
-        if result["data"]["catalog"]["track"].get("lyrics"):
+        if track_obj.get("lyrics"):
             lyrics = await self._get_lyrics(prov_track_id)
             parsed_lyrics, parsed_lrc_lyrics = await parse_lyrics(lyrics)
 
@@ -418,10 +418,10 @@ class Music247eMediaManager:
         variables = {"id": prov_playlist_id, "imageSize": IMAGE_SIZE}
 
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("playlists", {}).get("playlist"):
+        if not (playlist_obj := graphql_path(result, "data", "playlists", "playlist")):
             raise MediaNotFoundError(f"Playlist {prov_playlist_id} not found")
 
-        return await parse_playlist(self.provider, result["data"]["playlists"]["playlist"])
+        return await parse_playlist(self.provider, playlist_obj)
 
     async def get_album_tracks(
         self,
@@ -592,12 +592,11 @@ class Music247eMediaManager:
             "imageSize": IMAGE_SIZE,
         }
         result = await self.api.post_graphql(query, variables)
-        if not result or not result.get("data", {}).get("catalog", {}).get("track"):
+        if not (track_obj := graphql_path(result, "data", "catalog", "track")):
             raise MediaNotFoundError(f"Track {prov_track_id} not found")
 
         return [
-            await parse_track(self.provider, item)
-            for item in result["data"]["catalog"]["track"]["similarTracks"]["items"]
+            await parse_track(self.provider, item) for item in track_obj["similarTracks"]["items"]
         ]
 
     async def _get_lyrics(self, prov_track_id: str) -> list[JsonLike]:
