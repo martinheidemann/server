@@ -28,6 +28,22 @@ if TYPE_CHECKING:
 JsonLike = dict[str, Any]
 
 
+def graphql_path(result: JsonLike | None, *keys: str) -> Any:
+    """
+    Walk a GraphQL result by key, treating explicit nulls as missing.
+
+    ``dict.get(key, {})`` returns the stored value when the key exists, so a
+    GraphQL null - which is how the API reports an item that is gone from the
+    catalog - yields None and makes the next lookup in the chain raise.
+    """
+    node: Any = result
+    for key in keys:
+        if not isinstance(node, dict):
+            return None
+        node = node.get(key)
+    return node
+
+
 class InvalidDataError(Exception):
     """24-7 (247e) GraphQL error."""
 

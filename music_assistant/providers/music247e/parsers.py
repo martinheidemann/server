@@ -4,11 +4,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from music_assistant_models.enums import AlbumType, ContentType, ExternalID, ImageType
+from music_assistant_models.enums import (
+    AlbumType,
+    ContentType,
+    ExternalID,
+    ImageType,
+    MediaType,
+)
 from music_assistant_models.media_items import (
     Album,
     Artist,
     AudioFormat,
+    ItemMapping,
     MediaItemImage,
     Playlist,
     ProviderMapping,
@@ -62,9 +69,27 @@ async def parse_track(provider: Music247eProvider, track_obj: JsonLike) -> Track
         feat_artist = parse_artist(provider, feat_artist_obj)
         track.artists.append(feat_artist)
 
-    if "album" in track_obj:
-        album = await parse_album(provider, track_obj["album"])
-        track.album = album
+    if album_obj := track_obj.get("album"):
+        if album_obj.get("artist"):
+            track.album = await parse_album(provider, album_obj)
+        else:
+            # Should an album still arrive without its artist, parse_album would fall
+            # back to a catalog lookup, which raises for an album that has left the
+            # catalog and aborts the whole library sync. An ItemMapping is enough here.
+            track.album = ItemMapping(
+                media_type=MediaType.ALBUM,
+                item_id=str(album_obj["id"]),
+                provider=provider.instance_id,
+                name=album_obj["title"],
+                image=MediaItemImage(
+                    type=ImageType.THUMB,
+                    path=album_obj["cover"],
+                    remotely_accessible=True,
+                    provider=provider.instance_id,
+                )
+                if album_obj.get("cover")
+                else None,
+            )
 
     if track_genre := track_obj.get("genre"):
         track.metadata.genres = set(track_genre)
